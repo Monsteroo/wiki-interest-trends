@@ -36,6 +36,14 @@ def test_invented_numbers_are_found(text, found):
     assert invented_numbers(text) == found
 
 
+@pytest.mark.parametrize("text, found", [
+    ("Було 10\xa0050\xa0000 переглядів.", ["10\xa0050\xa0000"]),
+    ("Близько 10\xa0050 переглядів.", ["10\xa0050"]),
+])
+def test_invented_numbers_with_non_breaking_thousands_separators(text, found):
+    assert invented_numbers(text) == found
+
+
 def test_agent_text_with_invented_number_is_rejected_with_fix():
     values = placeholder_values([make_result("cs")], [], "uk")
     with pytest.raises(NarrativeError) as info:
