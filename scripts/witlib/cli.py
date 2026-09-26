@@ -124,21 +124,21 @@ def _run(args, client: ApiClient, out: TextIO) -> int:
         print("ERROR: no data for any series\nFIX: set substitutes for languages without an article, "
               "or tell the user the topic has no coverage there", file=out)
         return 4
-    build_report(folder, study, periods, results, ranking, texts)
+    files = build_report(folder, study, periods, results, ranking, texts)
     findings = {"meta": {"version": __version__, "as_of": as_of.isoformat(),
                          "analysis": [periods.analysis_months[0], periods.analysis_months[-1]],
                          "history": [periods.history_months[0], periods.history_months[-1]], "measure": study.measure,
                          "requests": client.request_count, "cache_hits": client.cache_hits,
-                         "agent_text": texts["agent_text"]},
+                         "agent_text": texts["agent_text"], "report_pages": files["pages"]},
                 "series": [asdict(r) for r in results], "ranking": ranking, "warnings": warnings,
                 "placeholders": texts["values"]}
     (folder / "findings.json").write_text(json.dumps(findings, ensure_ascii=False, indent=1), encoding="utf-8")
-    for line in _summary(study, periods, results, ranking, warnings, folder, texts):
+    for line in _summary(study, periods, results, ranking, warnings, folder, texts, pages=files["pages"]):
         print(line, file=out)
     return 0
 
 
-def _summary(study, periods, results, ranking, warnings, folder, texts) -> list[str]:
+def _summary(study, periods, results, ranking, warnings, folder, texts, pages: int = 1) -> list[str]:
     months = periods.analysis_months
     lines = [f"STUDY    {' + '.join(t.label for t in study.topics)} · {', '.join(study.languages)} · "
              f"{months[0]}..{months[-1]} ({len(months)} months) · measure={study.measure} · as of {periods.as_of}"]
@@ -159,7 +159,8 @@ def _summary(study, periods, results, ranking, warnings, folder, texts) -> list[
     joined = "; ".join(warnings)
     lines.append("WARNINGS " + ((joined[:297] + "...") if len(joined) > 300 else joined or "none"))
     if folder is not None:
-        lines.append(f"FILES    {Path(folder) / 'report.pdf'} (+ findings.json, chart_trend.png, chart_growth.png)")
+        note = f" — {pages} pages: the content did not fit on one page" if pages > 1 else ""
+        lines.append(f"FILES    {Path(folder) / 'report.pdf'}{note} (+ findings.json, chart_trend.png, chart_growth.png)")
     keys = sorted({k.rsplit('.', 1)[0] for k in texts["values"]})
     lines.append(f"KEYS     {', '.join(keys)} · METRICS {' '.join(METRICS)}")
     if texts["agent_text"]:

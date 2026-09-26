@@ -46,6 +46,15 @@ def test_worst_case_still_fits_one_page(tmp_path):
     assert page_text(path)[0] == 1
 
 
+def test_overflowing_report_spills_onto_a_second_page_without_clipping(tmp_path):
+    long = content(tmp_path, rows=8, text_len=700, steps=5)
+    long.footer = long.footer + [("Припущення", "довгий текст " * 500 + "КІНЕЦЬ")]
+    path = tmp_path / "report.pdf"
+    assert render_pdf(long, path) == 2
+    reader = PdfReader(str(path))
+    assert len(reader.pages) == 2 and "КІНЕЦЬ" in reader.pages[1].extract_text()
+
+
 def test_body_text_never_shrinks_below_7pt_and_small_print_below_5_5pt():
     smallest = min(SCALES)
     assert font_size("summary", smallest) >= 7 and font_size("steps", smallest) >= 7
@@ -56,5 +65,5 @@ def test_build_report_writes_charts_and_pdf(tmp_path):
     study = parse_study({"question": "Порівняй інтерес", "topics": [{"label": "Т", "wikidata": "Q1"}], "languages": ["cs", "pl"]})
     results = [make_result("cs", months=PERIODS.history_months), make_result("pl", verdict="no_data", status="no_article")]
     files = build_report(tmp_path, study, PERIODS, results, [], build_texts(study, results, []))
-    assert {p.name for p in files.values()} == {"report.pdf", "chart_trend.png", "chart_growth.png"}
-    assert page_text(files["report"])[0] == 1
+    assert {files[k].name for k in ("report", "trend", "growth")} == {"report.pdf", "chart_trend.png", "chart_growth.png"}
+    assert files["pages"] == 1 and page_text(files["report"])[0] == 1

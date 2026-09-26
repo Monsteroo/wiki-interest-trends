@@ -186,5 +186,5 @@ def build_report(folder: Path, study, periods, results, ranking: list[dict], tex
                           [{"label": labels[r.key], "growth": r.metrics.get("growth"), "months_up": r.metrics.get("months_up"),
                             "trust": r.trust} for r in results], t["growth_title"], t["na"])
     report = folder / "report.pdf"
-    render_pdf(compose(study, periods, results, ranking, texts, trend, growth), report)
-    return {"report": report, "trend": trend, "growth": growth}
+    pages = render_pdf(compose(study, periods, results, ranking, texts, trend, growth), report)
+    return {"report": report, "trend": trend, "growth": growth, "pages": pages}

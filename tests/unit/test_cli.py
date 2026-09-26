@@ -46,3 +46,22 @@ def test_network_failure_exits_with_code_3(tmp_path):
                        sleep=lambda s: None, max_attempts=2)
     code, out = run(["run", str(tmp_path), "--as-of", "2026-09-26"], client)
     assert code == 3 and "FIX" in out
+
+
+def test_summary_mentions_extra_pages(tmp_path):
+    from datetime import date
+
+    from helpers import make_result
+    from witlib.cli import _summary
+    from witlib.narrative import build_texts
+    from witlib.series import compute_periods
+    from witlib.study import parse_study
+
+    study = parse_study({"question": "q", "topics": [{"label": "T", "wikidata": "Q1"}], "languages": ["cs"]})
+    results = [make_result("cs")]
+    texts = build_texts(study, results, [])
+    periods = compute_periods(date(2026, 9, 26), 24)
+    two = _summary(study, periods, results, [], [], tmp_path, texts, pages=2)
+    one = _summary(study, periods, results, [], [], tmp_path, texts)
+    assert any("2 pages" in line for line in two if line.startswith("FILES"))
+    assert not any("pages" in line for line in one if line.startswith("FILES"))
