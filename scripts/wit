@@ -1,0 +1,24 @@
+#!/usr/bin/env bash
+# Runs the skill CLI with pinned dependencies: through uv when available, otherwise in a cached virtualenv.
+set -euo pipefail
+SKILL_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+REQ="$SKILL_DIR/requirements.txt"
+if command -v uv >/dev/null 2>&1; then
+  exec uv run --quiet --no-project --with-requirements "$REQ" python "$SKILL_DIR/scripts/wit.py" "$@"
+fi
+PY="${WIT_PYTHON:-python3}"
+if ! "$PY" -c 'import sys; sys.exit(0 if sys.version_info >= (3, 12) else 1)' 2>/dev/null; then
+  echo "ERROR: Python 3.12+ is required (found: $("$PY" --version 2>&1 || echo none))." >&2
+  echo "FIX: install Python 3.12+ or set WIT_PYTHON to its path." >&2
+  exit 5
+fi
+HASH="$({ shasum -a 256 "$REQ" 2>/dev/null || sha256sum "$REQ"; } | cut -c1-12)"
+VENV="${WIT_HOME:-$HOME/.cache/wiki-interest-trends}/venv-$HASH"
+if [ ! -f "$VENV/.ready" ]; then
+  echo "First run: preparing the Python environment in $VENV (about a minute)..." >&2
+  rm -rf "$VENV"
+  "$PY" -m venv "$VENV"
+  "$VENV/bin/python" -m pip install --quiet --disable-pip-version-check -r "$REQ" >&2
+  touch "$VENV/.ready"
+fi
+exec "$VENV/bin/python" "$SKILL_DIR/scripts/wit.py" "$@"
