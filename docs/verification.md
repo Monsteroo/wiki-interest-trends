@@ -27,7 +27,7 @@ Output of `tests/live/crosscheck.py` (daily sums used by the skill vs the API's 
 | uk: Астрономія | 6708 | 6708 | yes | [pageviews.wmcloud.org](https://pageviews.wmcloud.org/?project=uk.wikipedia.org&platform=all-access&agent=user&redirects=0&start=2025-09-01&end=2026-08-31&pages=%D0%90%D1%81%D1%82%D1%80%D0%BE%D0%BD%D0%BE%D0%BC%D1%96%D1%8F) |
 | pl: Język angielski | 97042 | 97042 | yes | [pageviews.wmcloud.org](https://pageviews.wmcloud.org/?project=pl.wikipedia.org&platform=all-access&agent=user&redirects=0&start=2025-09-01&end=2026-08-31&pages=J%C4%99zyk_angielski) |
 
-Manual check on pageviews.wmcloud.org for the first row: pending (done by the controller in a browser).
+Manual check on pageviews.wmcloud.org for the first row (2026-09-26, daily data, all platforms, agent = user, redirects not included, 2025-09-01 – 2026-08-31): the tool reports 2 198 views for «Přerušovaný půst» — identical to the skill's 2198.
 
 ## 4. Full scenario on Claude Haiku 4.5
 Filled in after the eval runs (Task 18).
