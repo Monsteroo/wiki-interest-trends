@@ -36,9 +36,13 @@ def test_invented_numbers_are_found(text, found):
     assert invented_numbers(text) == found
 
 
+NBSP, NNBSP = chr(0xA0), chr(0x202F)
+
+
 @pytest.mark.parametrize("text, found", [
-    ("Було 10\xa0050\xa0000 переглядів.", ["10\xa0050\xa0000"]),
-    ("Близько 10\xa0050 переглядів.", ["10\xa0050"]),
+    (f"Було 10{NBSP}050{NBSP}000 переглядів.", [f"10{NBSP}050{NBSP}000"]),
+    (f"Близько 10{NNBSP}050 переглядів.", [f"10{NNBSP}050"]),
+    (f"Разом 1{NNBSP}250{NBSP}000 читачів.", [f"1{NNBSP}250{NBSP}000"]),
 ])
 def test_invented_numbers_with_non_breaking_thousands_separators(text, found):
     assert invented_numbers(text) == found
