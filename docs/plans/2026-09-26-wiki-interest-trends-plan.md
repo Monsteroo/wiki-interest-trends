@@ -3790,7 +3790,7 @@ Limit: topics × languages ≤ 8.
 # Roadmap
 
 ## v1 — this version
-One to three topics in up to eight language editions; growth, trust with reasons, seasonality, ranking by the user's priorities; one-page PDF; follow-ups by editing `study.json` with cached data. Verified by unit and acceptance tests on recorded API responses and by scenarios run on Claude Haiku 4.5.
+One to three topics in up to eight language editions; growth, trust with reasons, seasonality, ranking by the user's priorities; a PDF report on one page (two only if the content does not fit); follow-ups by editing `study.json` with cached data. Verified by unit and acceptance tests on recorded API responses and by scenarios run on Claude Haiku 4.5.
 
 ## v2 — more precise answers
 - Suggest related articles automatically and rank them by traffic (today: `morelike` suggestions confirmed by the user).
@@ -3817,7 +3817,7 @@ One to three topics in up to eight language editions; growth, trust with reasons
 ````markdown
 # wiki-interest-trends
 
-An [Agent Skill](https://agentskills.io/specification) that helps B2C founders decide which topics to build and which languages to launch in, using Wikipedia pageviews. The agent turns a question into a small study form; the skill's Python code downloads the data, computes growth and how far to trust it, finds seasonality, ranks audiences by your priorities and produces charts plus a one-page PDF.
+An [Agent Skill](https://agentskills.io/specification) that helps B2C founders decide which topics to build and which languages to launch in, using Wikipedia pageviews. The agent turns a question into a small study form; the skill's Python code downloads the data, computes growth and how far to trust it, finds seasonality, ranks audiences by your priorities and produces charts plus a PDF report that fits on one page (two only if the content does not fit).
 
 Designed and tested for a cheap, fast model (Claude Haiku 4.5): the agent makes one decision (the form) and writes the conclusion; every number comes from the code.
 
@@ -4463,7 +4463,7 @@ Run: `.venv/bin/python -m pytest tests/unit/test_skill_md.py -q`
 ````markdown
 ---
 name: wiki-interest-trends
-description: Analyses Wikipedia pageview trends across language editions to help product teams decide which topics to build and which languages or markets to launch in. Compares interest between languages or topics, tells whether growth is real and how far to trust it, finds seasonality (when to launch), ranks audiences by the user's priorities, and produces charts plus a shareable one-page PDF report. Use when the user asks about interest in a topic on Wikipedia, compares languages or markets, plans localization, chooses a course or content topic, asks about growth trends or seasonality, or wants a short data-backed report.
+description: Analyses Wikipedia pageview trends across language editions to help product teams decide which topics to build and which languages or markets to launch in. Compares interest between languages or topics, tells whether growth is real and how far to trust it, finds seasonality (when to launch), ranks audiences by the user's priorities, and produces charts plus a shareable PDF report (one page whenever it fits). Use when the user asks about interest in a topic on Wikipedia, compares languages or markets, plans localization, chooses a course or content topic, asks about growth trends or seasonality, or wants a short data-backed report.
 license: MIT
 compatibility: Requires Python 3.12+ and internet access to Wikimedia APIs. Uses uv when available, otherwise creates a virtualenv on first run (about a minute).
 metadata:
