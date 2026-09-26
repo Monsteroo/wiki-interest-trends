@@ -21,7 +21,7 @@
 - Пороги методики (спека §7): вердикт ±10% і ≥ 7 з 12 місяців; довіра R1 < 100 → low, < 500 → medium; R2 7–8 → medium; R3 подія → low; R4 нова стаття → low; R5 замінник → medium. Сплеск — `≥ 20` і `> max(5·med, med + 10·MAD)` за 28 попередніх днів. Сезонність стабільна, якщо пік повторюється у ≥ 60% циклів і профіль ≥ 1.20, при ≥ 3 циклах.
 - Бланк: ≤ 3 теми, ≤ 8 мов, тем × мов ≤ 8, `months` 12–120, `summary` ≤ 600 символів, `next_steps` ≤ 5 × 200.
 - Коди виходу: 0 — успіх, 2 — помилка бланку або тексту, 3 — мережа, 4 — немає даних, 5 — середовище.
-- Вижимка `run` — не більше 25 рядків. PDF — рівно 1 сторінка A4, шрифт DejaVu, мінімум 7 pt для основного тексту.
+- Вижимка `run` — не більше 25 рядків. PDF — рівно 1 сторінка A4, шрифт DejaVu; «Головне» і «Що робити далі» ніколи не дрібніші за 7 pt, а таблиця, бічний блок і футер (дрібний друк) — за 5,5 pt.
 - TDD: кожне завдання — тест, що падає → мінімальний код → тест проходить → коміт. Погоджені винятки: конфігурація (`requirements*.txt`, `pytest.ini`, обгортка `scripts/wit`), зовнішній вигляд графіків і PDF, текст `SKILL.md` (його перевіряють сценарії на Haiku).
 - У тестах підміняємо лише HTTP-транспорт; записані відповіді повні й справжні; невідомий URL — помилка.
 - Кожен коміт закінчується рядком `Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>`.
@@ -3017,7 +3017,7 @@ git commit -m "feat: trend and growth charts for the report" -m "Co-Authored-By:
 
 **Interfaces:**
 - Consumes: `trend_chart`, `growth_chart`, `TREND_SIZE`, `GROWTH_SIZE` (Task 12); `TEXTS`, `fmt_int`, `fmt_pct`, `fmt_share` (Task 11); `Study`, `Periods`, `SeriesResult`.
-- Produces: `ReportContent(title, question, meta, summary_heading, summary, trend_png, growth_png, side_heading, side_lines, table_header, table_rows, steps_heading, steps, footer)`, `clip(text, limit)`, `render_pdf(content, path) -> int` (кількість сторінок; зменшує масштаб 1.0 → 0.92 → 0.85 → 0.78, доки не вміститься), `compose(study, periods, results, ranking, texts, trend_png, growth_png) -> ReportContent`, `build_report(folder, study, periods, results, ranking, texts) -> {"report", "trend", "growth": Path}`.
+- Produces: `FONT_SIZES`, `FONT_FLOORS`, `SCALES`, `font_size(role, scale) -> float` (основний текст ≥ 7 pt, дрібний друк ≥ 5,5 pt), `ReportContent(title, question, meta, summary_heading, summary, trend_png, growth_png, side_heading, side_lines, table_header, table_rows, steps_heading, steps, footer)`, `clip(text, limit)`, `render_pdf(content, path) -> int` (кількість сторінок; зменшує масштаб 1.0 → 0.92 → 0.85 → 0.78, доки не вміститься), `compose(study, periods, results, ranking, texts, trend_png, growth_png) -> ReportContent`, `build_report(folder, study, periods, results, ranking, texts) -> {"report", "trend", "growth": Path}`.
 
 - [ ] **Step 1: Тести**
 
@@ -3030,7 +3030,7 @@ from pypdf import PdfReader
 from helpers import make_result
 from witlib.charts import growth_chart, trend_chart
 from witlib.narrative import build_texts
-from witlib.report import ReportContent, build_report, render_pdf
+from witlib.report import SCALES, ReportContent, build_report, font_size, render_pdf
 from witlib.series import compute_periods
 from witlib.study import parse_study
 
@@ -3071,6 +3071,12 @@ def test_worst_case_still_fits_one_page(tmp_path):
     assert page_text(path)[0] == 1
 
 
+def test_body_text_never_shrinks_below_7pt_and_small_print_below_5_5pt():
+    smallest = min(SCALES)
+    assert font_size("summary", smallest) >= 7 and font_size("steps", smallest) >= 7
+    assert min(font_size(role, smallest) for role in ("table", "side", "footer")) >= 5.5
+
+
 def test_build_report_writes_charts_and_pdf(tmp_path):
     study = parse_study({"question": "Порівняй інтерес", "topics": [{"label": "Т", "wikidata": "Q1"}], "languages": ["cs", "pl"]})
     results = [make_result("cs", months=PERIODS.history_months), make_result("pl", verdict="no_data", status="no_article")]
@@ -3105,6 +3111,14 @@ PAGE_W, MARGIN = 210, 12
 USABLE_W = PAGE_W - 2 * MARGIN
 SCALES = (1.0, 0.92, 0.85, 0.78)
 COLUMNS = (34, 44, 20, 16, 18, 22, 32)
+FONT_SIZES = {"title": 14, "question": 9, "meta": 7.5, "heading": 10.5, "summary": 9, "steps": 8.5,
+              "side_heading": 8.5, "side": 7.5, "table": 7.2, "footer": 6.3}
+FONT_FLOORS = {"summary": 7.0, "steps": 7.0, "side": 5.5, "table": 5.5, "footer": 5.5}
+
+
+def font_size(role: str, scale: float) -> float:
+    """Point size of a text role at a layout scale: body text never below 7 pt, small print never below 5.5 pt."""
+    return max(FONT_SIZES[role] * scale, FONT_FLOORS.get(role, 0.0))
 
 
 @dataclass
@@ -3147,17 +3161,18 @@ def _draw(c: ReportContent, s: float) -> FPDF:
         pdf.add_font("DejaVu", style, str(FONT_DIR / file))
     pdf.add_page()
 
-    def text(size: float, value: str, style: str = "", color: int = 0) -> None:
-        pdf.set_font("DejaVu", style, size * s)
+    def text(role: str, value: str, style: str = "", color: int = 0) -> None:
+        size = font_size(role, s)
+        pdf.set_font("DejaVu", style, size)
         pdf.set_text_color(color)
-        pdf.multi_cell(0, size * s * 0.45, value, new_x="LMARGIN", new_y="NEXT")
+        pdf.multi_cell(0, size * 0.45, value, new_x="LMARGIN", new_y="NEXT")
 
-    text(14, c.title, "B")
-    text(9, c.question, "I", 60)
-    text(7.5, c.meta, "", 90)
+    text("title", c.title, "B")
+    text("question", c.question, "I", 60)
+    text("meta", c.meta, "", 90)
     pdf.ln(1.5 * s)
-    text(10.5, c.summary_heading, "B")
-    text(9, clip(c.summary, 700))
+    text("heading", c.summary_heading, "B")
+    text("summary", clip(c.summary, 700))
     pdf.ln(1.5 * s)
     pdf.image(str(c.trend_png), x=MARGIN, w=USABLE_W * s)
     pdf.ln(1 * s)
@@ -3167,38 +3182,37 @@ def _draw(c: ReportContent, s: float) -> FPDF:
     side_x = MARGIN + growth_w + 4
     side_w = PAGE_W - MARGIN - side_x
     pdf.set_xy(side_x, top + 1)
-    pdf.set_font("DejaVu", "B", 8.5 * s)
+    pdf.set_font("DejaVu", "B", font_size("side_heading", s))
     pdf.set_text_color(0)
-    pdf.multi_cell(side_w, 4 * s, c.side_heading, new_x="LEFT", new_y="NEXT")
-    pdf.set_font("DejaVu", "", 7.5 * s)
+    pdf.multi_cell(side_w, font_size("side_heading", s) * 0.47, c.side_heading, new_x="LEFT", new_y="NEXT")
+    pdf.set_font("DejaVu", "", font_size("side", s))
     for line in c.side_lines[:6]:
         pdf.set_x(side_x)
-        pdf.multi_cell(side_w, 3.4 * s, clip(line, 90), new_x="LEFT", new_y="NEXT")
+        pdf.multi_cell(side_w, font_size("side", s) * 0.45, clip(line, 90), new_x="LEFT", new_y="NEXT")
     pdf.set_xy(MARGIN, max(top + growth_w * GROWTH_SIZE[1] / GROWTH_SIZE[0], pdf.get_y()) + 2 * s)
     _table(pdf, c, s)
     pdf.ln(2 * s)
-    text(10, c.steps_heading, "B")
-    pdf.set_font("DejaVu", "", 8.5 * s)
-    pdf.set_text_color(0)
+    text("heading", c.steps_heading, "B")
     for step in c.steps[:5]:
-        pdf.multi_cell(0, 3.9 * s, "• " + clip(step, 220), new_x="LMARGIN", new_y="NEXT")
+        text("steps", "• " + clip(step, 220))
     pdf.ln(2 * s)
-    pdf.set_font("DejaVu", "", max(6.3 * s, 5.5))
+    pdf.set_font("DejaVu", "", font_size("footer", s))
     pdf.set_text_color(100)
     for heading, body in c.footer:
-        pdf.multi_cell(0, 2.8 * s, f"**{heading}:** {body}", markdown=True, new_x="LMARGIN", new_y="NEXT")
+        pdf.multi_cell(0, font_size("footer", s) * 0.44, f"**{heading}:** {body}", markdown=True, new_x="LMARGIN", new_y="NEXT")
     return pdf
 
 
 def _table(pdf: FPDF, c: ReportContent, s: float) -> None:
-    row_h = 4.6 * s
-    pdf.set_font("DejaVu", "B", 7.2 * s)
+    size = font_size("table", s)
+    row_h = size * 0.64
+    pdf.set_font("DejaVu", "B", size)
     pdf.set_text_color(0)
     pdf.set_fill_color(235, 238, 242)
     for width, head in zip(COLUMNS, c.table_header):
         pdf.cell(width, row_h, _fit(pdf, head, width), border="B", fill=True)
     pdf.ln(row_h)
-    pdf.set_font("DejaVu", "", 7.2 * s)
+    pdf.set_font("DejaVu", "", size)
     for row in c.table_rows[:8]:
         for width, value in zip(COLUMNS, row):
             pdf.cell(width, row_h, _fit(pdf, value, width))
@@ -3275,7 +3289,7 @@ def build_report(folder: Path, study, periods, results, ranking: list[dict], tex
 - [ ] **Step 4: Тести проходять**
 
 Run: `.venv/bin/python -m pytest tests/unit/test_report.py -q`
-Очікувано: 3 passed.
+Очікувано: 4 passed.
 
 - [ ] **Step 5: Візуальна перевірка (виняток TDD: вигляд)**
 
