@@ -8,7 +8,7 @@ from .languages import language_name
 METRICS = ("growth", "growth_clean", "views", "share", "months_up", "trust", "verdict", "peak_month", "rank", "title")
 PLACEHOLDER_RE = re.compile(r"\{([^{}]+)\}")
 PERCENT_RE = re.compile(r"\d+(?:[.,]\d+)?\s*%")
-NUMBER_RE = re.compile("\\d{1,3}(?:[ \xa0 ,.]\d{3})+|\\d+")
+NUMBER_RE = re.compile(r"\d{1,3}(?:[ \xa0\u202f,.]\d{3})+|\d+")
 
 MONTHS_UK = ["січень", "лютий", "березень", "квітень", "травень", "червень", "липень", "серпень", "вересень", "жовтень", "листопад", "грудень"]
 MONTHS_UK_LOC = ["січні", "лютому", "березні", "квітні", "травні", "червні", "липні", "серпні", "вересні", "жовтні", "листопаді", "грудні"]
