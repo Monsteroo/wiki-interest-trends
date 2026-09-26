@@ -4,7 +4,7 @@ set -euo pipefail
 SKILL_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 REQ="$SKILL_DIR/requirements.txt"
 if command -v uv >/dev/null 2>&1; then
-  exec uv run --quiet --no-project --with-requirements "$REQ" python "$SKILL_DIR/scripts/wit.py" "$@"
+  exec uv run --quiet --no-project --python ">=3.12" --with-requirements "$REQ" python "$SKILL_DIR/scripts/wit.py" "$@"
 fi
 PY="${WIT_PYTHON:-python3}"
 if ! "$PY" -c 'import sys; sys.exit(0 if sys.version_info >= (3, 12) else 1)' 2>/dev/null; then
