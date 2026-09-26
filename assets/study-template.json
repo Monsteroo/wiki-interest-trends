@@ -1,0 +1,7 @@
+{
+  "question": "<the user's question, verbatim>",
+  "topics": [{"label": "<short topic name>", "wikidata": "Q1666254", "related": [], "substitutes": {}}],
+  "languages": ["pl", "cs"],
+  "months": 24,
+  "measure": "share"
+}
