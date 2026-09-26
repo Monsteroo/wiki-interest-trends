@@ -40,7 +40,20 @@ def record_resolve(client):
     page_info(client, "de", ["Achtsamkeit"])
 
 
-FLOWS = [record_resolve]
+def record_runs(client):
+    from witlib.series import collect_inputs, compute_periods
+    from witlib.study import parse_study
+
+    studies = ROOT / "tests" / "acceptance" / "studies"
+    for name in ("e1_fasting", "e2_astronomy", "e3_english"):
+        form = json.loads((studies / f"{name}.json").read_text(encoding="utf-8"))
+        forms = [form] + ([form | {"languages": form["languages"] + ["sk"]}] if name == "e1_fasting" else [])
+        for variant in forms:
+            study = parse_study(variant)
+            collect_inputs(client, study, compute_periods(AS_OF, study.months))
+
+
+FLOWS = [record_resolve, record_runs]
 
 
 def main():
