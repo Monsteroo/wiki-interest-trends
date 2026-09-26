@@ -15,6 +15,8 @@ def growth(series: dict[str, float], recent: list[str], previous: list[str]) -> 
 
 
 def months_up_down(series: dict[str, float], months: list[str]) -> tuple[int, int]:
+    if len(months) < 24:
+        raise ValueError(f"months_up_down needs at least 24 months, got {len(months)}")
     up = down = 0
     for i in range(len(months) - 12, len(months)):
         now, year_ago = series[months[i]], series[months[i - 12]]

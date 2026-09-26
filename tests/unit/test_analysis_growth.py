@@ -32,6 +32,11 @@ def test_months_down_count_declines_only():
     assert months_up_down(series, MONTHS) == (0, 8)
 
 
+def test_months_up_down_needs_two_full_years():
+    with pytest.raises(ValueError, match="at least 24 months"):
+        months_up_down({m: 1.0 for m in RECENT}, RECENT)
+
+
 def test_window_growth_is_annualised_over_three_years():
     window = [f"m{i:02d}" for i in range(36)]
     series = {m: (100.0 if i < 12 else 121.0) for i, m in enumerate(window)}
@@ -45,6 +50,13 @@ def test_window_growth_is_annualised_over_three_years():
     ((0.5, 6, 6), "no_clear_trend"),
     ((-0.10, 0, 7), "declining"),
     ((None, 12, 0), "no_clear_trend"),
+    ((-0.10, 0, 6), "no_clear_trend"),
+    ((-0.0999, 0, 12), "no_clear_trend"),
 ])
 def test_verdict_thresholds(args, expected):
     assert decide_verdict(*args) == expected
+
+
+def test_window_growth_is_undefined_when_the_first_year_is_empty():
+    window = [f"m{i:02d}" for i in range(36)]
+    assert window_growth({m: (0.0 if i < 12 else 50.0) for i, m in enumerate(window)}, window) is None
