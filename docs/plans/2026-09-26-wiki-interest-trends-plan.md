@@ -21,7 +21,7 @@
 - Пороги методики (спека §7): вердикт ±10% і ≥ 7 з 12 місяців; довіра R1 < 100 → low, < 500 → medium; R2 7–8 → medium; R3 подія → low; R4 нова стаття → low; R5 замінник → medium. Сплеск — `≥ 20` і `> max(5·med, med + 10·MAD)` за 28 попередніх днів. Сезонність стабільна, якщо пік повторюється у ≥ 60% циклів і профіль ≥ 1.20, при ≥ 3 циклах.
 - Бланк: ≤ 3 теми, ≤ 8 мов, тем × мов ≤ 8, `months` 12–120, `summary` ≤ 600 символів, `next_steps` ≤ 5 × 200.
 - Коди виходу: 0 — успіх, 2 — помилка бланку або тексту, 3 — мережа, 4 — немає даних, 5 — середовище.
-- Вижимка `run` — не більше 25 рядків. PDF — рівно 1 сторінка A4, шрифт DejaVu; «Головне» і «Що робити далі» ніколи не дрібніші за 7 pt, а таблиця, бічний блок і футер (дрібний друк) — за 5,5 pt.
+- Вижимка `run` — не більше 25 рядків. PDF — A4, мета — 1 сторінка: при переповненні шрифти зменшуються до мінімумів; якщо й тоді не вміщується, звіт займає 2 сторінки, текст не обрізається, а `run` показує кількість сторінок (рішення користувача). Шрифт DejaVu; «Головне» і «Що робити далі» ніколи не дрібніші за 7 pt, а таблиця, бічний блок і футер (дрібний друк) — за 5,5 pt.
 - TDD: кожне завдання — тест, що падає → мінімальний код → тест проходить → коміт. Погоджені винятки: конфігурація (`requirements*.txt`, `pytest.ini`, обгортка `scripts/wit`), зовнішній вигляд графіків і PDF, текст `SKILL.md` (його перевіряють сценарії на Haiku).
 - У тестах підміняємо лише HTTP-транспорт; записані відповіді повні й справжні; невідомий URL — помилка.
 - Кожен коміт закінчується рядком `Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>`.
@@ -4100,8 +4100,8 @@ def test_invented_percentage_is_caught(tmp_path):
 
 
 def test_missing_trust_limitation_and_extra_pages_are_caught(tmp_path):
-    failures = check_scenario({"id": "E2"}, workdir(tmp_path, "Росте на 12%.", pages=2))
-    assert failures == ["report.pdf has 2 pages", "answer does not state trust", "answer names no limitation"]
+    failures = check_scenario({"id": "E2"}, workdir(tmp_path, "Росте на 12%.", pages=3))
+    assert failures == ["report.pdf has 3 pages", "answer does not state trust", "answer names no limitation"]
 
 
 def test_clarifying_question_passes_when_allowed(tmp_path):
@@ -4234,7 +4234,7 @@ def check_scenario(scenario: dict, workdir: Path) -> list[str]:
         from pypdf import PdfReader
 
         pages = len(PdfReader(str(pdf)).pages)
-        if pages != 1:
+        if pages > 2:
             failures.append(f"report.pdf has {pages} pages")
     low = answer.lower()
     if not any(word in low for word in TRUST_WORDS):
