@@ -62,6 +62,11 @@ def test_decline_explained_by_last_years_spike_is_event_driven():
     assert [r["code"] for r in found] == ["event_driven"] and found[0]["direction"] == "down"
 
 
+def test_undefined_growth_never_crashes_the_event_rule():
+    assert codes(growth=None, growth_clean=0.15) == []
+    assert codes(verdict="declining", growth=None, growth_clean=-0.15, months_up=0, months_down=12) == []
+
+
 def test_new_article_lowers_trust():
     assert codes(first_view_month="2025-03") == ["new_article"]
 

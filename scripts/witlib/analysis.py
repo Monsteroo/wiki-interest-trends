@@ -85,9 +85,9 @@ def trust_reasons(*, level_views: float, verdict: str, growth: float | None, gro
         reasons.append({"code": "inconsistent", "level": "medium", "months": months_up, "direction": "up"})
     if verdict == "declining" and months_down in (7, 8):
         reasons.append({"code": "inconsistent", "level": "medium", "months": months_down, "direction": "down"})
-    if verdict == "growing" and growth_clean is not None and (growth_clean < 0.10 or growth_clean < growth / 2):
+    if verdict == "growing" and growth is not None and growth_clean is not None and (growth_clean < 0.10 or growth_clean < growth / 2):
         reasons.append({"code": "event_driven", "level": "low", "date": top_spike, "direction": "up"})
-    if verdict == "declining" and growth_clean is not None and (growth_clean > -0.10 or growth_clean > growth / 2):
+    if verdict == "declining" and growth is not None and growth_clean is not None and (growth_clean > -0.10 or growth_clean > growth / 2):
         reasons.append({"code": "event_driven", "level": "low", "date": top_spike, "direction": "down"})
     if first_view_month is not None and first_view_month >= comparison_start:
         reasons.append({"code": "new_article", "level": "low", "month": first_view_month})
