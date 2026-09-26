@@ -55,7 +55,7 @@
 | `api.py` | HTTP: User-Agent, пауза між запитами, повтори, 404, дисковий кеш. Транспорт можна підмінити | — |
 | `study.py` | Читає і перевіряє бланк, ставить значення за замовчуванням, дає зрозумілі помилки | — |
 | `resolve.py` | Тема → Wikidata → статті по мовах; неоднозначність; редиректи; кандидати на заміну; `morelike` | `api` |
-| `series.py` | Завантажує щоденні перегляди і тотали мовного розділу; будує місячні ряди; нулі, повні місяці, частка | `api` |
+| `series.py` | Завантажує щоденні перегляди і тотали мовного розділу; будує місячні ряди; нулі, повні місяці, частка | `api`, `resolve`, `study` |
 | `analysis.py` | Рівні, ріст, сталість, сплески, довіра, вердикт, рейтинг | — |
 | `seasonality.py` | Профіль за місяцями, стабільність піку | — |
 | `narrative.py` | Шаблонний текст, плейсхолдери, запобіжник чисел, локалізація uk/en | — |
@@ -142,7 +142,7 @@ NEXT      decide substitutes/related, then: scripts/wit run wiki-studies/fasting
 7. Записує в теку дослідження `findings.json`, `chart_trend.png`, `chart_growth.png`, `report.pdf`; старі файли перезаписуються.
 8. **Вижимка** до 25 рядків. На кожен ряд: перегляди на місяць, частка, ріст, «ріст у N з 12», довіра з головною причиною, сезонність. Далі рейтинг, попередження, шляхи до файлів, ключі та метрики для плейсхолдерів.
 
-Коди виходу: 0 — успіх; 2 — помилка бланку або тексту агента; 3 — мережа недоступна після повторів; 4 — немає даних для жодного ряду.
+Коди виходу: 0 — успіх; 2 — помилка бланку або тексту агента; 3 — мережа недоступна після повторів; 4 — немає даних для жодного ряду; 5 — непридатне середовище (немає Python 3.12+; повертає обгортка `scripts/wit`).
 
 `findings.json` містить:
 - `meta`: `as_of`, періоди, кількість запитів і влучань у кеш, версія;
@@ -261,7 +261,7 @@ NEXT      decide substitutes/related, then: scripts/wit run wiki-studies/fasting
 **Frontmatter:**
 - `name: wiki-interest-trends`;
 - `description` з тригерами: Wikipedia pageviews, interest trend, compare languages/markets, localization, which course/topic, seasonality, one-page PDF;
-- `compatibility`: Python ≥ 3.11, доступ до інтернету.
+- `compatibility`: Python ≥ 3.12, доступ до інтернету.
 
 **Розділи:**
 - коли використовувати;
@@ -283,7 +283,7 @@ NEXT      decide substitutes/related, then: scripts/wit run wiki-studies/fasting
 
 ## 12. Середовище
 
-- Python ≥ 3.11 (перевіряємо на 3.14, macOS arm64).
+- Python ≥ 3.12, бо numpy 2.5 і contourpy 1.4 (залежності matplotlib 3.11) підтримують лише 3.12+. Перевіряємо на 3.14, macOS arm64.
 - `requirements.txt` — точні версії `requests`, `matplotlib`, `fpdf2`. `requirements-dev.txt` — те саме плюс `pytest` і `pypdf`.
 - `scripts/wit` — обгортка на bash:
   - якщо є `uv`, запускає `uv run --no-project --with-requirements requirements.txt …`;
