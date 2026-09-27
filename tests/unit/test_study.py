@@ -95,3 +95,12 @@ def test_load_study_from_folder_and_invalid_json(tmp_path):
     (tmp_path / "study.json").write_text("{bad", encoding="utf-8")
     with pytest.raises(StudyError, match="not valid JSON"):
         load_study(tmp_path)
+
+
+def test_priorities_with_a_single_series_warn_that_there_is_nothing_to_rank():
+    study = parse_study(form(languages=["es"], priorities={"growth": 0.7, "reach": 0.3}))
+    assert study.warnings == ["priorities ignored: a ranking needs at least 2 series (topics x languages); tell the user there is nothing to compare"]
+
+
+def test_priorities_with_two_series_give_no_warning():
+    assert parse_study(form(languages=["pl", "cs"], priorities={"growth": 1})).warnings == []

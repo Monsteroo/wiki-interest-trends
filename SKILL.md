@@ -41,9 +41,9 @@ If it prints `ERROR` and `FIX`, apply the FIX and run again. The summary has one
 ### 4. Answer the user
 Answer in the user's language, briefly:
 1. The answer to the question: the verdict per language or topic, with the YoY growth figure. Name the meaning you analysed with the article title, e.g. «Меркурій — планета (Merkur (Planet))», especially when the word has other meanings.
-2. A line that starts with "Довіра:" (or "Trust:" when answering in English): the level (high, medium or low) and its reason. Low trust means the signal is weak; say so and do not build a recommendation on it alone.
+2. A line that starts with "Довіра:" (or "Trust:" when answering in English): the level (high, medium or low) and the reason printed after it; when trust is high, say that none of the warning rules fired — do not invent a reason. Low trust means the signal is weak; say so and do not build a recommendation on it alone.
 3. Spikes: if a series line lists `spikes:`, name the biggest spike date, say the change may be driven by that event and suggest re-checking in 3–6 months. Never call such growth steady.
-4. The seasonal peak month and the ranking, if present.
+4. The seasonal peak month exactly as printed (`peak September +71% (3/5 years)` is a stable, repeating peak, not noise) and the ranking, if present. If `WARNINGS` says priorities were ignored, tell the user there is nothing to rank.
 5. A line that starts with "Обмеження:" (or "Limitation:" when answering in English) naming at least one: a Wikipedia language is not a country; pageviews show interest, not willingness to pay; substitutes and related articles are indirect measures.
 6. The path to `report.pdf`.
 

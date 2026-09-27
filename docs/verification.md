@@ -46,6 +46,11 @@ Numbers in the answers were checked against the engine and, for E2, against the 
 
 What the evals found in the engine, not only in the text: the Spanish "Eclipse solar" had 78 300 views in August 2026 (the total eclipse over Spain on 12 August) against about 16 000 in a typical month. The engine caps single spike days, so a month-long event surge still counts as growth with high trust. The answer now warns about it, and since the final review the PDF adds "re-check the trend in 3–6 months" whenever a series has spikes in the last 12 months. The spec (§2, scenario T2) expects low trust here; changing the trust rule itself is deferred to v2 (roadmap), because a month-level rule also needs re-checking on seasonal topics.
 
+### Manual test by the author (2026-09-27, Claude Code desktop, model Claude Haiku 4.5)
+The skill was installed as a personal skill (`~/.claude/skills/wiki-interest-trends`) and questions were asked in plain words from an empty folder, with no mention of the skill. This closes the gap above: **Haiku chose the skill from its description by itself** in all four questions (intermittent fasting pl/cs, Mercury in German — it picked the planet, solar eclipses in Spanish with a 70:30 growth/reach follow-up, astronomy in Ukrainian). Every metric in the answers matched the run summary (+86% / +61%, 9 of 12 months, spikes 2026-08-11..13; −36% / −35%, peak September +71%).
+
+Found by hand and fixed afterwards: Haiku invented a share of growth caused by spikes ("60–70%"), explained high trust by "large traffic" (the engine gives no reason for high trust), called the stable September peak "noise", and applied 70:30 priorities to a single series. Fixes: SKILL.md tells the agent to use only the printed trust reason and to quote seasonality as printed; the engine now warns `priorities ignored: a ranking needs at least 2 series`.
+
 Still open after the three iterations the plan allows: Haiku sometimes adds comparisons of its own ("more than twice" for 1.5×), an outside fact, or paraphrases the limitation in words the checker does not know. Next steps: have the engine print ready-made comparison sentences, and replace keyword checks with a small rubric graded by a second model.
 
 ## 5. How AI tools were used

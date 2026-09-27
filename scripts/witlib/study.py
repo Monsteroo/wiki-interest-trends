@@ -92,6 +92,8 @@ def parse_study(data: object) -> Study:
         problems.append(("next_steps", "must be a list of up to 5 texts of up to 200 characters", "Keep 2-4 short action items"))
     if problems:
         raise StudyError(problems)
+    if priorities and len(topics) * len(languages) < 2:
+        warnings.append("priorities ignored: a ranking needs at least 2 series (topics x languages); tell the user there is nothing to compare")
     return Study(question=question, topics=topics, languages=languages, months=months, measure=measure,
                  priorities=priorities, report_language=report_language, summary=summary,
                  next_steps=next_steps, warnings=warnings)
