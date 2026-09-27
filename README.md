@@ -1,6 +1,6 @@
 # wiki-interest-trends
 
-An [Agent Skill](https://agentskills.io/specification) that helps B2C founders decide which topics to build and which languages to launch in, using Wikipedia pageviews. The agent turns a question into a small study form; the skill's Python code downloads the data, computes growth and how far to trust it, finds seasonality, ranks audiences by your priorities and produces charts plus a one-page PDF.
+An [Agent Skill](https://agentskills.io/specification) that helps B2C founders decide which topics to build and which languages to launch in, using Wikipedia pageviews. The agent turns a question into a small study form; the skill's Python code downloads the data, computes growth and how far to trust it, finds seasonality, ranks audiences by your priorities and produces charts plus a PDF report that fits on one page (two only if the content does not fit).
 
 Designed and tested for a cheap, fast model (Claude Haiku 4.5): the agent makes one decision (the form) and writes the conclusion; every number comes from the code.
 

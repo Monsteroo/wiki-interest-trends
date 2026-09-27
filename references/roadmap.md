@@ -1,7 +1,7 @@
 # Roadmap
 
 ## v1 — this version
-One to three topics in up to eight language editions; growth, trust with reasons, seasonality, ranking by the user's priorities; one-page PDF; follow-ups by editing `study.json` with cached data. Verified by unit and acceptance tests on recorded API responses and by scenarios run on Claude Haiku 4.5.
+One to three topics in up to eight language editions; growth, trust with reasons, seasonality, ranking by the user's priorities; a PDF report on one page (two only if the content does not fit); follow-ups by editing `study.json` with cached data. Verified by unit and acceptance tests on recorded API responses and by scenarios run on Claude Haiku 4.5.
 
 ## v2 — more precise answers
 - Suggest related articles automatically and rank them by traffic (today: `morelike` suggestions confirmed by the user).
