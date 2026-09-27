@@ -8,6 +8,7 @@ One to three topics in up to eight language editions; growth, trust with reasons
 - Bot filter: compare mobile and desktop trends; desktop-only surges are a typical automated-traffic signature.
 - Follow page moves (MediaWiki `logevents`) so renamed articles keep their history.
 - Forecast with a prediction interval for the next 6–12 months.
+- Event months in the trust rules: v1 caps single spike days, but a month-long surge around an event (Spanish "Eclipse solar", August 2026: 78 300 views against about 16 000 in a typical month) still counts as growth with high trust. Lower trust when one month holds most of the year's growth; found by the Haiku eval, see `evals/results/`.
 
 ## v3 — more data
 - Replace per-article API calls with the bulk pageview dumps (`dumps.wikimedia.org/other/pageview_complete`, about 5 GB per month) loaded into a local DuckDB/Parquet store with incremental monthly updates: hundreds of articles × all languages without API limits.
