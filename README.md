@@ -36,7 +36,7 @@ Details: [references/methodology.md](references/methodology.md) · decisions: [d
 ## How it was verified
 - Unit and acceptance tests written before the code, on synthetic series and on recorded real API responses: `.venv/bin/python -m pytest`.
 - Live checks against the real API: `.venv/bin/python -m pytest -m live`.
-- The case scenarios run end to end on Claude Haiku 4.5: `evals/`.
+- The case scenarios run end to end on Claude Haiku 4.5: without the skill 0/7 pass, with it 5/7 by the keyword checker (the two failures are wording; hand reading still found a few comparisons the model made up), every report on one page: `evals/`, details in [docs/verification.md](docs/verification.md#4-full-scenario-on-claude-haiku-45).
 - Independent cross-check of numbers and notes on how AI tools were used: [docs/verification.md](docs/verification.md).
 
 ## Development

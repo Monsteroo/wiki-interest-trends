@@ -30,7 +30,21 @@ Output of `tests/live/crosscheck.py` (daily sums used by the skill vs the API's 
 Manual check on pageviews.wmcloud.org for the first row (2026-09-26, daily data, all platforms, agent = user, redirects not included, 2025-09-01 – 2026-08-31): the tool reports 2 198 views for «Přerušovaný půst» — identical to the skill's 2198.
 
 ## 4. Full scenario on Claude Haiku 4.5
-Filled in after the eval runs (Task 18).
+Seven scenarios (`evals/scenarios.json`): the three case examples E1–E3, follow-ups F1 ("add Slovak") and F2 ("growth matters more than size"), an ambiguous topic T1 (Mercury) and an event-driven topic T2 (solar eclipses). Each ran in a fresh Claude Code subagent on Claude Haiku 4.5; `evals/check.py` checks the artifacts and the answer, and every answer was also read by hand. Raw tables: `evals/results/`.
+
+| run | skill version | checker | what changed after it |
+|---|---|---|---|
+| baseline, no skill | — | 0/7 | wrong articles (Polish "therapeutic fasting", Slovak religious "Pôst"), invented numbers ("Ukraine +14%", "reliability 97/100"), no report |
+| 1 | 31507b8 | 5/7 | run summary now prints spike dates and the seasonal uplift; SKILL.md rules for spikes, a labelled limitation, no self-made percentages |
+| 2 | c06baca | 5/7 | SKILL.md asks for a labelled "Довіра:" line |
+| 3 | 0417c9a | 5/7 (6/7 with the corrected T2 check) | SKILL.md asks to name the analysed meaning; the T2 check accepts any spike date |
+| 4 | 7645d3b | 5/7 | — (the two failures are wording: a synonym for "indirect", a date written as 08-12-2026) |
+
+Numbers in the answers were checked against the engine and, for E2, against the raw API: the four astronomy articles sum to 64 423 → 30 069 views, −53.3%, the same as the skill (the 4-view gap is the one redirect it adds).
+
+What the evals found in the engine, not only in the text: the Spanish "Eclipse solar" had 78 300 views in August 2026 (the total eclipse over Spain on 12 August) against about 16 000 in a typical month. The engine caps single spike days, so a month-long event surge still counts as growth with high trust. The answer now warns about it; the trust rule is on the roadmap (v2).
+
+Still open after the three iterations the plan allows: Haiku sometimes adds comparisons of its own ("more than twice" for 1.5×), an outside fact, or paraphrases the limitation in words the checker does not know. Next steps: have the engine print ready-made comparison sentences, and replace keyword checks with a small rubric graded by a second model.
 
 ## 5. How AI tools were used
 - Claude (Opus) was used for brainstorming, the architecture decision, the specification, the plan and the code, following test-driven development.
