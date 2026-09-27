@@ -1,13 +1,14 @@
 from datetime import date
+from pathlib import Path
 
 from pypdf import PdfReader
 
 from helpers import make_result
 from witlib.charts import growth_chart, trend_chart
 from witlib.narrative import build_texts
-from witlib.report import SCALES, ReportContent, build_report, font_size, render_pdf
+from witlib.report import SCALES, ReportContent, build_report, clip, compose, font_size, render_pdf
 from witlib.series import compute_periods
-from witlib.study import parse_study
+from witlib.study import Study, Topic, parse_study
 
 PERIODS = compute_periods(date(2026, 9, 26), 24)
 
@@ -64,6 +65,35 @@ def test_body_text_never_shrinks_below_7pt_and_small_print_below_5_5pt():
 def test_build_report_writes_charts_and_pdf(tmp_path):
     study = parse_study({"question": "Порівняй інтерес", "topics": [{"label": "Т", "wikidata": "Q1"}], "languages": ["cs", "pl"]})
     results = [make_result("cs", months=PERIODS.history_months), make_result("pl", verdict="no_data", status="no_article")]
-    files = build_report(tmp_path, study, PERIODS, results, [], build_texts(study, results, []))
+    files = build_report(tmp_path, study, PERIODS, results, [], build_texts(study, results, [], PERIODS))
     assert {files[k].name for k in ("report", "trend", "growth")} == {"report.pdf", "chart_trend.png", "chart_growth.png"}
     assert files["pages"] == 1 and page_text(files["report"])[0] == 1
+
+
+def test_ranking_lines_always_fit_when_many_series_have_stable_peaks():
+    study = Study(question="q", topics=[Topic(label="T1", wikidata="Q1"), Topic(label="T2", wikidata="Q2")],
+                  languages=["cs"], report_language="en")
+    peak = {"status": "stable_peak", "peak_month": 1, "peak_years": 3, "cycles": 5}
+    results = [make_result(f"s{i}", verdict="growing", seasonality=peak, topic_label=f"Series {i}") for i in range(5)]
+    ranking = [{"key": f"s{i}", "position": i + 1, "score": 1.0 - i * 0.1, "ranks": {}, "trust": "high"} for i in range(3)]
+    texts = build_texts(study, results, ranking, PERIODS)
+    content = compose(study, PERIODS, results, ranking, texts, Path("trend.png"), Path("growth.png"))
+    ranking_lines = [line for line in content.side_lines if line[:1].isdigit()]
+    assert len(content.side_lines) <= 6
+    assert len(ranking_lines) == 3
+
+
+def test_clip_raised_to_1200_keeps_longer_summaries_in_the_pdf(tmp_path):
+    path = tmp_path / "report.pdf"
+    c = content(tmp_path)
+    c.summary = "Речення. " * 100 + "КІНЕЦЬ"
+    assert len(c.summary) < 1200
+    render_pdf(c, path)
+    assert "КІНЕЦЬ" in page_text(path)[1]
+
+
+def test_clip_function_truncates_past_the_limit():
+    text = "a" * 1199
+    assert clip(text, 1200) == text
+    clipped = clip("a" * 1205, 1200)
+    assert len(clipped) == 1200 and clipped.endswith("…")

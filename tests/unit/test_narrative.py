@@ -1,11 +1,15 @@
+from datetime import date
+
 import pytest
 
 from helpers import make_result
 from witlib.narrative import (NarrativeError, agent_texts, build_texts, fmt_int, fmt_pct, fmt_share, invented_numbers,
                               placeholder_values, reason_text, render, template_steps, template_summary)
+from witlib.series import compute_periods
 from witlib.study import parse_study
 
 PEAK = {"status": "stable_peak", "peak_month": 1, "peak_years": 4, "cycles": 5}
+MONTHS_24 = [f"2024-{m:02d}" for m in range(1, 13)] + [f"2025-{m:02d}" for m in range(1, 13)]
 
 
 def test_number_formats_per_language():
@@ -81,14 +85,37 @@ def test_template_summary_mentions_verdict_trust_season_and_ranking():
 def test_template_steps_always_end_with_validation():
     results = [make_result("pl", verdict="no_data", status="no_article"),
                make_result("cs", trust="low", reasons=[{"code": "low_volume", "level": "low", "views": 50}])]
-    steps = template_steps(results, [], {"pl": "Польська", "cs": "Чеська"}, "uk")
+    steps = template_steps(results, [], {"pl": "Польська", "cs": "Чеська"}, "uk", MONTHS_24)
     assert steps[0].startswith("Немає статті: Польська.") and steps[1].startswith("Замало переглядів: Чеська.")
     assert steps[-1].startswith("Перевірте готовність платити") and len(steps) <= 4
+
+
+def test_event_step_added_for_recent_spike_even_without_event_driven_trust():
+    recent_spike = [{"date": "2025-06-15", "views": 500, "typical": 50}]
+    old_spike = [{"date": "2024-06-15", "views": 500, "typical": 50}]
+    with_recent = make_result("cs", verdict="growing", trust="high", spikes=recent_spike)
+    with_old = make_result("pl", verdict="growing", trust="high", spikes=old_spike)
+    steps_recent = template_steps([with_recent], [], {"cs": "Чеська"}, "uk", MONTHS_24)
+    steps_old = template_steps([with_old], [], {"pl": "Польська"}, "uk", MONTHS_24)
+    assert any(s.startswith("Ріст через сплеск") for s in steps_recent)
+    assert not any(s.startswith("Ріст через сплеск") for s in steps_old)
+
+
+def test_event_step_lists_event_driven_and_recent_spike_series_once():
+    event_driven = make_result("cs", verdict="growing", trust="low",
+                               reasons=[{"code": "event_driven", "level": "low", "date": "2025-03-01", "direction": "up"}])
+    recent_spike = make_result("pl", verdict="growing", trust="high",
+                               spikes=[{"date": "2025-06-15", "views": 500, "typical": 50}])
+    steps = template_steps([event_driven, recent_spike], [], {"cs": "Чеська", "pl": "Польська"}, "uk", MONTHS_24)
+    event_steps = [s for s in steps if s.startswith("Ріст через сплеск")]
+    assert len(event_steps) == 1
+    assert "Чеська" in event_steps[0] and "Польська" in event_steps[0]
 
 
 def test_build_texts_prefers_agent_text_and_labels_by_language():
     study = parse_study({"question": "Порівняй", "topics": [{"label": "Т", "wikidata": "Q1"}], "languages": ["cs"],
                          "summary": "Ріст {cs.growth}."})
-    texts = build_texts(study, [make_result("cs", growth=0.2)], [])
+    periods = compute_periods(date(2026, 9, 26), 24)
+    texts = build_texts(study, [make_result("cs", growth=0.2)], [], periods)
     assert texts["summary"] == "Ріст +20%." and texts["agent_text"] is True
     assert texts["labels"] == {"cs": "Чеська"} and texts["steps"][-1].startswith("Перевірте")

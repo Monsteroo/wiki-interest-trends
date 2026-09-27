@@ -15,7 +15,7 @@ How `scripts/wit run` turns pageviews into verdicts. The code computes everythin
 
 ## Growth
 - Year-over-year growth = mean of the last 12 months / mean of the previous 12 months − 1. It is computed for both measures; the verdict uses `measure`. Comparing whole years cancels seasonality.
-- For `months` ≥ 36 the report also gives annualised growth between the first and the last 12 months of the window.
+- For `months` ≥ 36 the run summary and `findings.json` also give annualised growth between the first and the last 12 months of the window (not shown in the PDF).
 - Months up (down): in how many of the last 12 months the value is above (below) the same month a year earlier.
 
 ## Spikes

@@ -72,12 +72,16 @@ for _code, _names in LANGUAGES.items():
     for _name in _names:
         _ALIASES[_name.casefold()] = _code
 
+COUNTRY_CODE_HINTS: dict[str, str] = {"ua": "uk", "cz": "cs", "gr": "el", "jp": "ja", "cn": "zh", "se": "sv", "dk": "da"}
+
 
 def normalize_language(value: str) -> str:
     """Return the Wikipedia code for a code or a language name; raise ValueError with a hint."""
     key = value.strip().casefold()
     if key in _ALIASES:
         return _ALIASES[key]
+    if key in COUNTRY_CODE_HINTS:
+        raise ValueError(f"unknown language '{value}'; did you mean '{COUNTRY_CODE_HINTS[key]}'? ({key} is a country code)")
     close = difflib.get_close_matches(key, list(_ALIASES), n=1, cutoff=0.6)
     hint = f"; did you mean '{_ALIASES[close[0]]}'?" if close else ""
     raise ValueError(f"unknown language '{value}'{hint}")

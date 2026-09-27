@@ -13,6 +13,13 @@ def test_unknown_language_suggests_closest_code():
         normalize_language("polsih")
 
 
+@pytest.mark.parametrize("country, language", [("ua", "uk"), ("cz", "cs"), ("gr", "el"), ("jp", "ja"),
+                                                ("cn", "zh"), ("se", "sv"), ("dk", "da")])
+def test_country_code_confusions_get_a_specific_hint(country, language):
+    with pytest.raises(ValueError, match=f"unknown language '{country}'; did you mean '{language}'\\? \\({country} is a country code\\)"):
+        normalize_language(country)
+
+
 def test_language_name_is_localised():
     assert language_name("cs", "uk") == "чеська"
     assert language_name("cs", "en") == "Czech"

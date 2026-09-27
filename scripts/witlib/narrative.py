@@ -247,18 +247,24 @@ def template_summary(results, ranking: list[dict], labels: dict[str, str], lang:
     return " ".join(parts)
 
 
-def template_steps(results, ranking: list[dict], labels: dict[str, str], lang: str) -> list[str]:
+def template_steps(results, ranking: list[dict], labels: dict[str, str], lang: str, analysis_months: list[str]) -> list[str]:
     t = TEXTS[lang]
 
     def names(predicate) -> str:
         return ", ".join(labels[r.key] for r in results if predicate(r))
+
+    recent_months = set(analysis_months[-12:])
+
+    def has_recent_spike(r) -> bool:
+        return any(spike["date"][:7] in recent_months for spike in r.spikes)
 
     steps = []
     if missing := names(lambda r: r.status in ("no_article", "disambiguation")):
         steps.append(t["steps"]["no_article"].format(labels=missing))
     if low := names(lambda r: any(x["code"] == "low_volume" for x in r.reasons)):
         steps.append(t["steps"]["low_volume"].format(labels=low))
-    if events := names(lambda r: any(x["code"] == "event_driven" for x in r.reasons)):
+    if events := names(lambda r: any(x["code"] == "event_driven" for x in r.reasons)
+                        or (r.status == "ok" and has_recent_spike(r))):
         steps.append(t["steps"]["event"].format(labels=events))
     seasonal = next((r for r in results if r.seasonality.get("status") == "stable_peak"), None)
     if seasonal:
@@ -269,12 +275,12 @@ def template_steps(results, ranking: list[dict], labels: dict[str, str], lang: s
     return steps[:3] + [t["steps"]["validate"]]
 
 
-def build_texts(study, results, ranking: list[dict]) -> dict:
+def build_texts(study, results, ranking: list[dict], periods) -> dict:
     lang = study.report_language
     labels = {r.key: series_label(r, len(study.topics), len(study.languages), lang) for r in results}
     values = placeholder_values(results, ranking, lang)
     summary, steps = agent_texts(study.summary, study.next_steps, values)
     return {"labels": labels, "values": values,
             "summary": summary or template_summary(results, ranking, labels, lang),
-            "steps": steps or template_steps(results, ranking, labels, lang),
+            "steps": steps or template_steps(results, ranking, labels, lang, periods.analysis_months),
             "agent_text": bool(summary or steps)}

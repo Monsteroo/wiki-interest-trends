@@ -1,4 +1,4 @@
-from witlib.charts import growth_chart, index_series, rolling_mean, trend_chart
+from witlib.charts import bar_label, growth_chart, index_series, rolling_mean, trend_chart
 
 MONTHS = [f"2025-{m:02d}" for m in range(1, 13)] + [f"2026-{m:02d}" for m in range(1, 13)]
 PNG = b"\x89PNG"
@@ -14,6 +14,12 @@ def test_trend_chart_draws_many_series_and_skips_empty_ones(tmp_path):
     series = [{"label": f"L{i}", "values": [float(i + 1)] * 24, "spike_months": ["2026-03"]} for i in range(7)]
     series.append({"label": "empty", "values": [0.0] * 24, "spike_months": []})
     assert trend_chart(tmp_path / "trend.png", MONTHS, series, "Динаміка інтересу").read_bytes()[:4] == PNG
+
+
+def test_bar_label_uses_fmt_pct_so_tiny_negatives_print_zero_not_plus_zero():
+    assert bar_label(-0.001, 9) == " 0% · 9/12 "
+    assert bar_label(-0.001, None) == " 0% "
+    assert bar_label(0.12, 9) == " +12% · 9/12 "
 
 
 def test_growth_chart_handles_missing_data(tmp_path):

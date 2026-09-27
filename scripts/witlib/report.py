@@ -76,7 +76,7 @@ def _draw(c: ReportContent, s: float) -> FPDF:
     text("meta", c.meta, "", 90)
     pdf.ln(1.5 * s)
     text("heading", c.summary_heading, "B")
-    text("summary", clip(c.summary, 700))
+    text("summary", clip(c.summary, 1200))
     pdf.ln(1.5 * s)
     pdf.image(str(c.trend_png), x=MARGIN, w=USABLE_W * s)
     pdf.ln(1 * s)
@@ -137,11 +137,11 @@ def compose(study, periods, results, ranking: list[dict], texts: dict, trend_png
     t = TEXTS[lang]
     labels = texts["labels"]
     months = periods.analysis_months
-    side = [t["side_season"].format(label=labels[r.key], month=t["months_nom"][r.seasonality["peak_month"] - 1],
-                                    years=r.seasonality["peak_years"], cycles=r.seasonality["cycles"])
-            for r in results if r.seasonality.get("status") == "stable_peak"] or [t["side_no_season"]]
-    side += [t["side_rank"].format(position=row["position"], label=labels[row["key"]], score=fmt_share(row["score"], lang))
-             for row in ranking if row.get("position")][:3]
+    season = [t["side_season"].format(label=labels[r.key], month=t["months_nom"][r.seasonality["peak_month"] - 1],
+                                      years=r.seasonality["peak_years"], cycles=r.seasonality["cycles"])
+              for r in results if r.seasonality.get("status") == "stable_peak"][:3] or [t["side_no_season"]]
+    side = season + [t["side_rank"].format(position=row["position"], label=labels[row["key"]], score=fmt_share(row["score"], lang))
+                     for row in ranking if row.get("position")][:3]
     rows = []
     for r in results:
         title = (r.title or "—") + (" *" if r.substitute else "")
@@ -173,7 +173,7 @@ def compose(study, periods, results, ranking: list[dict], texts: dict, trend_png
                 (t["headings"]["source"], t["source_text"].format(as_of=as_of))])
 
 
-def build_report(folder: Path, study, periods, results, ranking: list[dict], texts: dict) -> dict[str, Path]:
+def build_report(folder: Path, study, periods, results, ranking: list[dict], texts: dict) -> dict[str, Path | int]:
     t = TEXTS[study.report_language]
     labels = texts["labels"]
     months = periods.analysis_months

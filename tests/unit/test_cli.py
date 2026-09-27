@@ -1,5 +1,8 @@
 import io
 import json
+from pathlib import Path
+
+import pytest
 
 from witlib.api import ApiClient, Response
 from witlib.cli import main
@@ -59,24 +62,24 @@ def test_summary_mentions_extra_pages(tmp_path):
 
     study = parse_study({"question": "q", "topics": [{"label": "T", "wikidata": "Q1"}], "languages": ["cs"]})
     results = [make_result("cs")]
-    texts = build_texts(study, results, [])
     periods = compute_periods(date(2026, 9, 26), 24)
+    texts = build_texts(study, results, [], periods)
     two = _summary(study, periods, results, [], [], tmp_path, texts, pages=2)
     one = _summary(study, periods, results, [], [], tmp_path, texts)
     assert any("2 pages" in line for line in two if line.startswith("FILES"))
     assert not any("pages" in line for line in one if line.startswith("FILES"))
 
 
-def _run_summary(tmp_path, results):
+def _run_summary(tmp_path, results, months=24):
     from datetime import date
 
     from witlib.narrative import build_texts
     from witlib.series import compute_periods
     from witlib.study import parse_study
 
-    study = parse_study({"question": "q", "topics": [{"label": "T", "wikidata": "Q1"}], "languages": ["cs"]})
-    texts = build_texts(study, results, [])
-    periods = compute_periods(date(2026, 9, 26), 24)
+    study = parse_study({"question": "q", "topics": [{"label": "T", "wikidata": "Q1"}], "languages": ["cs"], "months": months})
+    periods = compute_periods(date(2026, 9, 26), months)
+    texts = build_texts(study, results, [], periods)
     from witlib.cli import _summary
     lines = _summary(study, periods, results, [], [], tmp_path, texts)
     return next(line for line in lines if line.strip().startswith("cs"))
@@ -121,9 +124,49 @@ def test_next_line_mentions_spikes_when_summary_lacks_agent_text(tmp_path):
 
     study = parse_study({"question": "q", "topics": [{"label": "T", "wikidata": "Q1"}], "languages": ["cs"]})
     results = [make_result("cs")]
-    texts = build_texts(study, results, [])
     periods = compute_periods(date(2026, 9, 26), 24)
+    texts = build_texts(study, results, [], periods)
     lines = _summary(study, periods, results, [], [], tmp_path, texts)
     next_line = next(line for line in lines if line.startswith("NEXT"))
     assert next_line == ("NEXT     answer: verdict, growth, trust + reason, spikes if listed, one limitation, report path; "
                           "copy numbers exactly. Optional: add summary/next_steps with {key.metric} placeholders and run again")
+
+
+def test_summary_shows_long_window_growth_after_up_n_of_12(tmp_path):
+    from helpers import make_result
+
+    result = make_result("cs")
+    result.metrics["window_growth"] = 0.083
+    line = _run_summary(tmp_path, [result], months=60)
+    assert "up 10/12 · 5y avg +8%/yr · growing" in line
+
+
+def test_summary_24_months_has_no_window_growth_text(tmp_path):
+    from helpers import make_result
+
+    line = _run_summary(tmp_path, [make_result("cs")], months=24)
+    assert "y avg" not in line and "/yr" not in line
+
+
+def test_bad_as_of_date_exits_2_via_argparse_not_a_traceback(client, capsys):
+    with pytest.raises(SystemExit) as excinfo:
+        main(["run", "somewhere", "--as-of", "not-a-date"], client=client, out=io.StringIO(), err=io.StringIO())
+    assert excinfo.value.code == 2
+    captured = capsys.readouterr()
+    assert "as-of" in captured.err and "not-a-date" in captured.err
+
+
+def test_resolve_save_next_line_uses_absolute_wrapper_path(client, tmp_path):
+    folder = tmp_path / "fasting"
+    argv = ["resolve", "інтервальне голодування", "--langs", "pl,cs", "--save", str(folder)]
+    code, out = run(argv, client)
+    wrapper = Path(__file__).resolve().parents[2] / "scripts" / "wit"
+    assert code == 0
+    assert f"NEXT      add substitutes/related if needed, then: {wrapper} run {folder}" in out
+
+
+def test_resolve_without_save_next_line_uses_absolute_wrapper_path(client):
+    code, out = run(["resolve", "інтервальне голодування", "--langs", "pl,cs"], client)
+    wrapper = Path(__file__).resolve().parents[2] / "scripts" / "wit"
+    assert code == 0
+    assert f"then: {wrapper} run <folder>" in out

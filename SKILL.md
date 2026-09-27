@@ -29,6 +29,7 @@ Read the output:
 Edit `wiki-studies/<short-name>/study.json`. Keep only what the user asked for.
 - The user wants to choose audiences, or gives priorities → `"priorities": {"growth": 0.4, "interest": 0.3, "reach": 0.3}` (weights follow their words).
 - "last five years" → `"months": 60`; absolute numbers → `"measure": "views"`.
+The verdict and YoY always compare the last 12 months with the previous 12; for longer periods quote the `Ny avg …/yr` figure from the summary.
 Field reference: [references/study-fields.md](references/study-fields.md)
 
 ### 3. Run
@@ -41,7 +42,7 @@ If it prints `ERROR` and `FIX`, apply the FIX and run again. The summary has one
 Answer in the user's language, briefly:
 1. The answer to the question: the verdict per language or topic, with the YoY growth figure. Name the meaning you analysed with the article title, e.g. «Меркурій — планета (Merkur (Planet))», especially when the word has other meanings.
 2. A line that starts with "Довіра:" (or "Trust:" when answering in English): the level (high, medium or low) and its reason. Low trust means the signal is weak; say so and do not build a recommendation on it alone.
-3. Spikes: if a series line lists `spikes:`, name the biggest spike date, say the growth may be driven by that event and suggest re-checking in 3–6 months. Never call such growth steady.
+3. Spikes: if a series line lists `spikes:`, name the biggest spike date, say the change may be driven by that event and suggest re-checking in 3–6 months. Never call such growth steady.
 4. The seasonal peak month and the ranking, if present.
 5. A line that starts with "Обмеження:" (or "Limitation:" when answering in English) naming at least one: a Wikipedia language is not a country; pageviews show interest, not willingness to pay; substitutes and related articles are indirect measures.
 6. The path to `report.pdf`.
@@ -83,11 +84,12 @@ Tell the user that "English language" articles are an indirect measure of intere
 ## Troubleshooting
 | message | what to do |
 |---|---|
-| `languages: unknown language 'polish'; did you mean 'pl'?` | use the code |
+| `languages: unknown language 'ua'; did you mean 'uk'? (ua is a country code)` | use the code |
 | `topics[1].wikidata: … is not a Wikidata id` | run `resolve` and copy the `Q…` id |
 | `summary contains '15%'` | replace the number with a placeholder such as `{cs.growth}` |
 | exit code 3 (network) | wait a minute and rerun; downloaded data is cached |
 | exit code 4 (no data) | the topic has no article in any requested language: set `substitutes` or report the gap |
 | exit code 5 (environment) | Python 3.12+ is missing: tell the user |
+| any other exit code | show the user the error text |
 
 How growth, trust, seasonality and ranking are computed: [references/methodology.md](references/methodology.md). What comes next: [references/roadmap.md](references/roadmap.md).

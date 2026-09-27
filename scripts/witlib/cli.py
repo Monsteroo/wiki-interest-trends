@@ -22,6 +22,7 @@ from .study import StudyError, load_study
 MONTHS_EN = TEXTS["en"]["months_nom"]
 SEASON = {"no_stable_pattern": "no stable peak", "low_volume": "too little traffic",
           "insufficient_history": "history too short", "no_data": "no data"}
+WRAPPER = Path(__file__).resolve().parents[1] / "wit"
 
 
 def main(argv: list[str] | None = None, *, client: ApiClient | None = None, out: TextIO | None = None,
@@ -62,7 +63,7 @@ def _parser() -> argparse.ArgumentParser:
     resolve.add_argument("--save", help="folder where study.json is written")
     run = sub.add_parser("run", help="run a study folder (or a study.json file)")
     run.add_argument("path")
-    run.add_argument("--as-of", help="analyse as of this date (YYYY-MM-DD) for a reproducible report")
+    run.add_argument("--as-of", type=date.fromisoformat, help="analyse as of this date (YYYY-MM-DD) for a reproducible report")
     run.add_argument("--refresh", action="store_true", help="ignore cached API responses")
     return parser
 
@@ -102,22 +103,22 @@ def _resolve(args, client: ApiClient, out: TextIO) -> int:
         (folder / "study.json").write_text(json.dumps(form, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
         note = "" if args.question else ' (add the user\'s question to "question")'
         print(f"FORM      saved to {folder / 'study.json'}{note}", file=out)
-        print(f"NEXT      add substitutes/related if needed, then: scripts/wit run {folder}", file=out)
+        print(f"NEXT      add substitutes/related if needed, then: {WRAPPER} run {folder}", file=out)
     else:
         print("FORM      " + json.dumps(form, ensure_ascii=False), file=out)
-        print("NEXT      save it as <folder>/study.json (or rerun with --save <folder>), then: scripts/wit run <folder>", file=out)
+        print(f"NEXT      save it as <folder>/study.json (or rerun with --save <folder>), then: {WRAPPER} run <folder>", file=out)
     return 0
 
 
 def _run(args, client: ApiClient, out: TextIO) -> int:
     study, folder = load_study(args.path)
-    as_of = date.fromisoformat(args.as_of) if args.as_of else datetime.now(timezone.utc).date()
+    as_of = args.as_of or datetime.now(timezone.utc).date()
     periods = compute_periods(as_of, study.months)
     inputs, warnings = collect_inputs(client, study, periods)
     warnings = study.warnings + warnings
     results = [analyze(inp, periods, study.measure) for inp in inputs]
     ranking = rank_series(results, study.priorities)
-    texts = build_texts(study, results, ranking)
+    texts = build_texts(study, results, ranking, periods)
     if all(r.verdict == "no_data" for r in results):
         for line in _summary(study, periods, results, ranking, warnings, None, texts):
             print(line, file=out)
@@ -151,9 +152,13 @@ def _summary(study, periods, results, ranking, warnings, folder, texts, pages: i
         why = f" ({reason_text(r.reasons[0], 'en')})" if r.trust != "high" and r.reasons else ""
         season = (f"peak {MONTHS_EN[s['peak_month'] - 1]} {fmt_pct(s['uplift'])} ({s['peak_years']}/{s['cycles']} years)"
                   if s["status"] == "stable_peak" else SEASON[s["status"]])
+        window_note = ""
+        if m.get("window_growth") is not None:
+            years = len(months) // 12
+            window_note = f" · {years}y avg {fmt_pct(m['window_growth'])}/yr"
         line = (f"  {r.key:<5} {r.title}{' [substitute]' if r.substitute else ''} · {m['views']}/month · "
                 f"{m['share']:.2f} per M · YoY {fmt_pct(m['growth'])} (without spikes {fmt_pct(m['growth_clean'])}) · "
-                f"up {m['months_up']}/12 · {r.verdict} · trust {r.trust}{why} · season: {season}")
+                f"up {m['months_up']}/12{window_note} · {r.verdict} · trust {r.trust}{why} · season: {season}")
         if r.spikes:
             top = sorted(r.spikes, key=lambda sp: sp["views"], reverse=True)
             dates = ", ".join(sp["date"] for sp in top[:3])
