@@ -5,7 +5,7 @@ from pathlib import Path
 from fpdf import FPDF
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "evals"))
-from check import allowed_percents, check_scenario, percents_in  # noqa: E402
+from check import _t2, allowed_percents, check_scenario, percents_in  # noqa: E402
 
 GOOD = "Інтерес у чеській зріс на 12% за рік, довіра середня. Обмеження: мова ≠ країна."
 
@@ -31,6 +31,32 @@ def test_percentages_are_read_from_text():
 def test_allowed_percentages_come_from_findings_and_priorities():
     findings = {"series": [{"metrics": {"growth": -0.123, "growth_clean": None}}]}
     assert allowed_percents(findings, {"priorities": {"growth": 0.6, "reach": 0.4}}) >= {0, 12, 60, 40}
+
+
+def test_allowed_percentages_include_seasonal_uplift():
+    findings = {"series": [{"metrics": {}, "seasonality": {"status": "stable_peak", "uplift": 0.713}}]}
+    assert allowed_percents(findings, {}) >= {71}
+
+
+def test_allowed_percentages_do_not_crash_on_missing_metrics_or_seasonality():
+    findings = {"series": [{"metrics": None}, {}]}
+    assert allowed_percents(findings, {}) == {0}
+
+
+def test_t2_accepts_the_word_spike():
+    findings = {"series": [{"spikes": [{"date": "2026-08-12", "views": 100}]}]}
+    assert _t2("сплеск переглядів у серпні", {}, findings) == []
+
+
+def test_t2_accepts_the_date_of_the_biggest_spike_without_a_keyword():
+    findings = {"series": [{"spikes": [{"date": "2026-08-11", "views": 50}, {"date": "2026-08-12", "views": 100}]}]}
+    assert _t2("зростання пов'язане з 2026-08-12", {}, findings) == []
+
+
+def test_t2_no_longer_accepts_generic_event_words():
+    findings = {"series": [{"spikes": [{"date": "2026-08-12", "views": 100}]}]}
+    failures = _t2("зростання через глобальну подію без деталей", {}, findings)
+    assert failures == ["spikes were found but the answer does not mention them"]
 
 
 def test_good_answer_passes(tmp_path):

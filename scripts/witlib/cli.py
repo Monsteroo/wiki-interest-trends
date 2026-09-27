@@ -149,11 +149,17 @@ def _summary(study, periods, results, ranking, warnings, folder, texts, pages: i
             continue
         m, s = r.metrics, r.seasonality
         why = f" ({reason_text(r.reasons[0], 'en')})" if r.trust != "high" and r.reasons else ""
-        season = (f"peak {MONTHS_EN[s['peak_month'] - 1]} ({s['peak_years']}/{s['cycles']} years)"
+        season = (f"peak {MONTHS_EN[s['peak_month'] - 1]} {fmt_pct(s['uplift'])} ({s['peak_years']}/{s['cycles']} years)"
                   if s["status"] == "stable_peak" else SEASON[s["status"]])
-        lines.append(f"  {r.key:<5} {r.title}{' [substitute]' if r.substitute else ''} · {m['views']}/month · "
-                     f"{m['share']:.2f} per M · YoY {fmt_pct(m['growth'])} (without spikes {fmt_pct(m['growth_clean'])}) · "
-                     f"up {m['months_up']}/12 · {r.verdict} · trust {r.trust}{why} · season: {season}")
+        line = (f"  {r.key:<5} {r.title}{' [substitute]' if r.substitute else ''} · {m['views']}/month · "
+                f"{m['share']:.2f} per M · YoY {fmt_pct(m['growth'])} (without spikes {fmt_pct(m['growth_clean'])}) · "
+                f"up {m['months_up']}/12 · {r.verdict} · trust {r.trust}{why} · season: {season}")
+        if r.spikes:
+            top = sorted(r.spikes, key=lambda sp: sp["views"], reverse=True)
+            dates = ", ".join(sp["date"] for sp in top[:3])
+            extra = f" (+{len(top) - 3} more)" if len(top) > 3 else ""
+            line += f" · spikes: {dates}{extra}"
+        lines.append(line)
     if ranking:
         lines.append("RANKING  " + " > ".join(f"{row['position']}. {row['key']} ({row['score']:.2f})" for row in ranking if row["position"]))
     joined = "; ".join(warnings)
@@ -166,6 +172,6 @@ def _summary(study, periods, results, ranking, warnings, folder, texts, pages: i
     if texts["agent_text"]:
         lines.append("NEXT     report updated with your summary/next_steps")
     else:
-        lines.append("NEXT     answer: verdict, growth, trust + reason, one limitation, report path; copy numbers exactly. "
-                     "Optional: add summary/next_steps with {key.metric} placeholders and run again")
+        lines.append("NEXT     answer: verdict, growth, trust + reason, spikes if listed, one limitation, report path; "
+                     "copy numbers exactly. Optional: add summary/next_steps with {key.metric} placeholders and run again")
     return lines

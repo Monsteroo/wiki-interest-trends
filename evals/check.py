@@ -23,10 +23,14 @@ def percents_in(text: str) -> set[int]:
 def allowed_percents(findings: dict, study: dict) -> set[int]:
     allowed = {0}
     for series in findings.get("series", []):
+        metrics = series.get("metrics") or {}
         for key in ("growth", "growth_views", "growth_share", "growth_clean", "window_growth"):
-            value = series.get("metrics", {}).get(key)
+            value = metrics.get(key)
             if value is not None:
                 allowed.add(abs(round(value * 100)))
+        uplift = (series.get("seasonality") or {}).get("uplift")
+        if uplift is not None:
+            allowed.add(abs(round(uplift * 100)))
     priorities = study.get("priorities") or {}
     total = sum(priorities.values()) or 1
     for value in priorities.values():
@@ -72,9 +76,12 @@ def _t1(answer, study, findings):
 
 
 def _t2(answer, study, findings):
-    has_spikes = any(s.get("spikes") for s in findings.get("series", []))
-    mentioned = any(w in answer for w in ("сплеск", "затемнен", "поді", "spike", "eclipse", "event"))
-    return [] if (not has_spikes or mentioned) else ["spikes were found but the answer does not mention them"]
+    all_spikes = [sp for s in findings.get("series", []) for sp in (s.get("spikes") or [])]
+    if not all_spikes:
+        return []
+    biggest_date = max(all_spikes, key=lambda sp: sp.get("views", 0)).get("date", "")
+    mentioned = any(w in answer for w in ("сплеск", "spike")) or (biggest_date and biggest_date in answer)
+    return [] if mentioned else ["spikes were found but the answer does not mention them"]
 
 
 SPECIFIC = {"E1": _e1, "E3": _e3, "F1": _f1, "F2": _f2, "T1": _t1, "T2": _t2}
