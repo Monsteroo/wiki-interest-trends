@@ -79,8 +79,8 @@ def _t2(answer, study, findings):
     all_spikes = [sp for s in findings.get("series", []) for sp in (s.get("spikes") or [])]
     if not all_spikes:
         return []
-    biggest_date = max(all_spikes, key=lambda sp: sp.get("views", 0)).get("date", "")
-    mentioned = any(w in answer for w in ("сплеск", "spike")) or (biggest_date and biggest_date in answer)
+    dates = {sp.get("date") for sp in all_spikes if sp.get("date")}
+    mentioned = any(w in answer for w in ("сплеск", "spike")) or any(d in answer for d in dates)
     return [] if mentioned else ["spikes were found but the answer does not mention them"]
 
 

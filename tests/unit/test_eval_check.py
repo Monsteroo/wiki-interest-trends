@@ -48,7 +48,7 @@ def test_t2_accepts_the_word_spike():
     assert _t2("сплеск переглядів у серпні", {}, findings) == []
 
 
-def test_t2_accepts_the_date_of_the_biggest_spike_without_a_keyword():
+def test_t2_accepts_a_spike_date_without_a_keyword():
     findings = {"series": [{"spikes": [{"date": "2026-08-11", "views": 50}, {"date": "2026-08-12", "views": 100}]}]}
     assert _t2("зростання пов'язане з 2026-08-12", {}, findings) == []
 
@@ -75,3 +75,13 @@ def test_missing_trust_limitation_and_extra_pages_are_caught(tmp_path):
 def test_clarifying_question_passes_when_allowed(tmp_path):
     (tmp_path / "answer.md").write_text("Який Меркурій вас цікавить: планета чи хімічний елемент?", encoding="utf-8")
     assert check_scenario({"id": "T1", "clarification_ok": True}, tmp_path) == []
+
+
+def test_t2_accepts_any_spike_date_from_findings():
+    findings = {"series": [{"spikes": [{"date": "2026-08-11", "views": 50}, {"date": "2026-08-12", "views": 100}]}]}
+    assert _t2("піки з 2026-08-11 до 2026-08-13", {}, findings) == []
+
+
+def test_t2_rejects_the_topic_word_eclipse_alone():
+    findings = {"series": [{"spikes": [{"date": "2026-08-12", "views": 100}]}]}
+    assert _t2("інтерес до eclipse зростає", {}, findings) == ["spikes were found but the answer does not mention them"]

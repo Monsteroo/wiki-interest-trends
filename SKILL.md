@@ -39,7 +39,7 @@ If it prints `ERROR` and `FIX`, apply the FIX and run again. The summary has one
 
 ### 4. Answer the user
 Answer in the user's language, briefly:
-1. The answer to the question: the verdict per language or topic, with the YoY growth figure.
+1. The answer to the question: the verdict per language or topic, with the YoY growth figure. Name the meaning you analysed with the article title, e.g. «Меркурій — планета (Merkur (Planet))», especially when the word has other meanings.
 2. A line that starts with "Довіра:" (or "Trust:" when answering in English): the level (high, medium or low) and its reason. Low trust means the signal is weak; say so and do not build a recommendation on it alone.
 3. Spikes: if a series line lists `spikes:`, name the biggest spike date, say the growth may be driven by that event and suggest re-checking in 3–6 months. Never call such growth steady.
 4. The seasonal peak month and the ranking, if present.
