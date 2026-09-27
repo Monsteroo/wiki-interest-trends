@@ -44,7 +44,7 @@ Seven scenarios (`evals/scenarios.json`): the three case examples E1–E3, follo
 
 Numbers in the answers were checked against the engine and, for E2, against the raw API: the four astronomy articles sum to 64 423 → 30 069 views, −53.3%, the same as the skill (the 4-view gap is the one redirect it adds).
 
-What the evals found in the engine, not only in the text: the Spanish "Eclipse solar" had 78 300 views in August 2026 (the total eclipse over Spain on 12 August) against about 16 000 in a typical month. The engine caps single spike days, so a month-long event surge still counts as growth with high trust. The answer now warns about it; the trust rule is on the roadmap (v2).
+What the evals found in the engine, not only in the text: the Spanish "Eclipse solar" had 78 300 views in August 2026 (the total eclipse over Spain on 12 August) against about 16 000 in a typical month. The engine caps single spike days, so a month-long event surge still counts as growth with high trust. The answer now warns about it, and since the final review the PDF adds "re-check the trend in 3–6 months" whenever a series has spikes in the last 12 months. The spec (§2, scenario T2) expects low trust here; changing the trust rule itself is deferred to v2 (roadmap), because a month-level rule also needs re-checking on seasonal topics.
 
 Still open after the three iterations the plan allows: Haiku sometimes adds comparisons of its own ("more than twice" for 1.5×), an outside fact, or paraphrases the limitation in words the checker does not know. Next steps: have the engine print ready-made comparison sentences, and replace keyword checks with a small rubric graded by a second model.
 

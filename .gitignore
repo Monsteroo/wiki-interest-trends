@@ -4,3 +4,4 @@ __pycache__/
 .venv/
 wiki-studies/
 evals/workdir/
+.DS_Store
