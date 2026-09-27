@@ -29,12 +29,14 @@ Output of `tests/live/crosscheck.py` (daily sums used by the skill vs the API's 
 
 Manual check on pageviews.wmcloud.org for the first row (2026-09-26, daily data, all platforms, agent = user, redirects not included, 2025-09-01 – 2026-08-31): the tool reports 2 198 views for «Přerušovaný půst» — identical to the skill's 2198.
 
+This cross-check covers downloading and summing. Share per million, growth, trust and seasonality rest on the unit tests (synthetic series with known answers) and on the E2 hand check in §4.
+
 ## 4. Full scenario on Claude Haiku 4.5
-Seven scenarios (`evals/scenarios.json`): the three case examples E1–E3, follow-ups F1 ("add Slovak") and F2 ("growth matters more than size"), an ambiguous topic T1 (Mercury) and an event-driven topic T2 (solar eclipses). Each ran in a fresh Claude Code subagent on Claude Haiku 4.5; `evals/check.py` checks the artifacts and the answer, and every answer was also read by hand. Raw tables: `evals/results/`.
+Seven scenarios (`evals/scenarios.json`): the three case examples E1–E3, follow-ups F1 ("add Slovak") and F2 ("growth matters more than size"), an ambiguous topic T1 (Mercury) and an event-driven topic T2 (solar eclipses). Each ran in a fresh Claude Code subagent on Claude Haiku 4.5 whose prompt announced the installed skill with its name and description (`evals/subagent_prompt.md`), so activation by description was simulated, not tested; the baseline got the same prompt without that block; `evals/check.py` checks the artifacts and the answer, and every answer was also read by hand. Raw tables: `evals/results/`.
 
 | run | skill version | checker | what changed after it |
 |---|---|---|---|
-| baseline, no skill | — | 0/7 | wrong articles (Polish "therapeutic fasting", Slovak religious "Pôst"), invented numbers ("Ukraine +14%", "reliability 97/100"), no report |
+| baseline, no skill | — | 0/7 (by construction: only the skill writes `study.json`) | wrong articles (Polish "therapeutic fasting", Slovak religious "Pôst"), invented numbers ("Ukraine +14%", "reliability 97/100"), no report |
 | 1 | 31507b8 | 5/7 | run summary now prints spike dates and the seasonal uplift; SKILL.md rules for spikes, a labelled limitation, no self-made percentages |
 | 2 | c06baca | 5/7 | SKILL.md asks for a labelled "Довіра:" line |
 | 3 | 0417c9a | 5/7 (6/7 with the corrected T2 check) | SKILL.md asks to name the analysed meaning; the T2 check accepts any spike date |
@@ -47,7 +49,8 @@ What the evals found in the engine, not only in the text: the Spanish "Eclipse s
 Still open after the three iterations the plan allows: Haiku sometimes adds comparisons of its own ("more than twice" for 1.5×), an outside fact, or paraphrases the limitation in words the checker does not know. Next steps: have the engine print ready-made comparison sentences, and replace keyword checks with a small rubric graded by a second model.
 
 ## 5. How AI tools were used
-- Claude (Opus) was used for brainstorming, the architecture decision, the specification, the plan and the code, following test-driven development.
-- Every factual claim about external APIs was verified with live requests before it shaped the design; claims that failed (for example, that Wikidata "subclass of" yields reader-relevant related topics) were dropped.
-- Every rule is covered by a test that was seen failing first; generated PDFs and charts were reviewed visually.
-- The agent-facing part (SKILL.md) was checked by running the case scenarios on a cheap model and comparing the answers with the computed findings.
+- **Design (Claude Opus 5.5):** brainstorming, the architecture decision (ADR-001), the specification and the 19-task test-first plan. Every factual claim about external APIs was verified with live requests before it shaped the design; claims that failed (for example, that Wikidata "subclass of" yields reader-relevant related topics) were dropped.
+- **Implementation (subagents):** each task was implemented by a separate subagent from a written brief — Claude Haiku 4.5 for tasks that transcribe fully specified code, Claude Sonnet 5 for integration work (commit trailers: 13 Haiku 4.5, 13 Sonnet 5, 9 Opus 5.5 for docs, eval results and small controller fixes).
+- **Review:** every task was reviewed by a different subagent against the spec and the brief, reading the diff, not the implementer's report; implementer claims (test counts, outputs) were re-run by the controller, and two reports with wrong numbers were caught that way. Every Important finding that changed behaviour went to the user for a decision (for example: two-page reports instead of clipping, font floors, Python ≥ 3.12 in the wrapper). A final whole-branch review by Claude Opus found four more issues, fixed before release.
+- **Tests:** every rule is covered by a test that was seen failing first; generated PDFs and charts were reviewed visually.
+- **The agent-facing part (SKILL.md)** was checked by running the case scenarios on Claude Haiku 4.5 and comparing the answers with the computed findings (§4).

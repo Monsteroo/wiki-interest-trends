@@ -8,7 +8,7 @@ Designed and tested for a cheap, fast model (Claude Haiku 4.5): the agent makes 
 Requires Python 3.12+ and internet access.
 
 ```bash
-git clone <this repository> ~/.claude/skills/wiki-interest-trends
+git clone https://github.com/Monsteroo/wiki-interest-trends ~/.claude/skills/wiki-interest-trends
 ```
 or clone into `<project>/.claude/skills/`. On first use `scripts/wit` either runs through `uv` or creates a pinned virtualenv in `~/.cache/wiki-interest-trends/` (about a minute). Optional: `export WIT_CONTACT=<your email or URL>` for the Wikimedia User-Agent.
 
@@ -36,12 +36,12 @@ Details: [references/methodology.md](references/methodology.md) · decisions: [d
 ## How it was verified
 - Unit and acceptance tests written before the code, on synthetic series and on recorded real API responses: `.venv/bin/python -m pytest`.
 - Live checks against the real API: `.venv/bin/python -m pytest -m live`.
-- The case scenarios run end to end on Claude Haiku 4.5: without the skill 0/7 pass, with it 5/7 by the keyword checker (the two failures are wording; hand reading still found a few comparisons the model made up), every report on one page: `evals/`, details in [docs/verification.md](docs/verification.md#4-full-scenario-on-claude-haiku-45).
+- The case scenarios run end to end on Claude Haiku 4.5: without the skill no report and invented numbers in 5 of 7 answers (read by hand); with it 5/7 by the keyword checker (the two failures are wording; hand reading still found a few comparisons the model made up), every report on one page: `evals/`, details in [docs/verification.md](docs/verification.md#4-full-scenario-on-claude-haiku-45).
 - Independent cross-check of numbers and notes on how AI tools were used: [docs/verification.md](docs/verification.md).
 
 ## Development
 ```bash
-python3 -m venv .venv && .venv/bin/pip install -r requirements-dev.txt
+python3 -m venv .venv && .venv/bin/pip install -r requirements-dev.txt  # python3 must be 3.12+
 .venv/bin/python -m pytest
 ```
 
